@@ -1,0 +1,63 @@
+<form method="post" enctype="multipart/form-data" id="test_form">
+	<select class="category" name="category">
+                <option value>--未选择分类--</option>
+        </select>
+	<input type="file" name="file" onchange="showPreview(this)">
+	<a type="button" onclick='ajaxForm()' href="javascript:;">上传</a>
+</form>
+
+<script src="{{ url_for('static', filename='lib/jquery-3.5.0.min.js') }}"></script>
+<script src="{{ url_for('static', filename='lib/cryptojslib/rollups/md5.js') }}"></script>
+<script>
+	$(document).ready(function(){
+		get_categories();
+	})
+
+	function get_categories(){
+		$.ajax({
+			url: "http://12plus12.cn:8080/categories",
+			type: "get",
+			dataType: "json",
+			success: function(data){
+				var html_ = $(".category").html();
+				for (i in data) {
+					if (data[i][1] != 1) {
+						html_ += "<option value=" + data[i][0] +">" + data[i][0] + "</option>";
+					}
+				}
+				$(".category").html(html_);
+			}
+		})
+	}
+
+	var file_hash = "";
+	function showPreview(source) {
+		var file = source.files[0];
+		if (window.FileReader) {
+			var fr = new FileReader();
+			fr.readAsBinaryString(file);
+			fr.onload = function(e) {
+				file_hash = CryptoJS.MD5(e.target.result);
+			}
+		}
+	}
+
+	function ajaxForm(){
+		var form = new FormData(document.getElementById("test_form"));
+//		var form = $("#test_form").serialize();
+		form.append("file_hash", file_hash);
+		$.ajax({
+			url: "/upload",
+			type: "post",
+			data: form,
+			dataType: "json",
+			processData: false,
+			contentType: false,
+			success: function(s){
+				if (s["is_existed"]) {alert("文件已存在，请勿重复上传");}
+				else {alert("upload success");window.location.replace("pan");}
+				//console.log(s["is_existed"]);
+			}
+		})
+	}
+</script>

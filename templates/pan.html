@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>YunPan</title>
+	<style type="text/css">
+		ul{list-style: none;}
+		.up li{display: inline-block;}
+		#categories {
+			width: 450px;
+		}
+		.category_name {
+			border: 1px solid black;
+			background: #bfbfbf;
+			height: 30px;
+		}
+		span {
+			line-height: 30px;
+		}
+		.file_name {
+			display: none;
+		}
+
+		img {
+			width: 50px;
+			height: 30px;
+		}
+
+		.alert {
+			width: 400px;
+			height: 250px;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			margin-left: -200px;
+			margin-top: -125px;
+			display: none;
+			background: white;
+		}
+
+	</style>
+	<script src="../static/lib/jquery-3.5.0.min.js"></script>
+</head>
+<body>
+<h1>公告：+++++++++++++++++</h1>
+<button>
+	<a href="">管理员登录</a>
+</button>
+<p>云盘</p>
+<button>
+	<a href="/upload">上传</a>
+</button>
+<div>
+<button class="new_category"><a>新建分类</a></button>
+<div class="alert">
+<input class="new_category_name" type="text">
+<button class="new_category_bt">新建</button>
+</div>
+</div>
+
+<!--{% for file in files %}
+<ul class="up">
+	<li class="pic{{ loop.index-1 }}">
+		<span>{{ file[1] }}</span>
+		<img class="preview_pic{{ loop.index-1 }}">
+	</li>
+	<li><a href="{{ file[3] }}">下载</a></li>
+    <li>迅雷下载</li>
+    <li>删除</li>
+</ul>
+{% endfor %}-->
+
+
+<div id="categories"></div>
+
+</body>
+<script type="text/javascript">
+	$(document).ready(function(){
+		/*$("[class*='pic']").mouseenter(function(){
+			var num = $(this).attr("class").substring($(this).attr("class").search(/\d/),);
+			var file_name = $(this).find("span").html();
+			if(file_name){
+			$(".preview_pic"+num).attr("src", "../static/files/images/"+file_name);
+			$(".preview_pic"+num).css("display", "block");
+			};
+		});
+		$("[class*=pic]").mouseleave(function(){
+			$("[class*=preview_pic]").css("display", "none");
+		});*/
+		get_categories();
+		show_alert();
+		add_category();
+	})
+
+	function add_category() {
+		$(".new_category_bt").click(function(){
+			if ($(".new_category_name").val() == "") { alert("不能为空"); return false;}
+			var data = {};
+			data["category_name"] = $(".new_category_name").val();
+			$.ajax({
+				url: "http://12plus12.cn:8080/add_category",
+				type: "post",
+				data: JSON.stringify(data),
+				contentType: 'application/json;charset=UTF-8',
+				datatype: "json",
+				success: function(data){
+					if (data["is_existed"]) {alert("分类已存在，请勿新建重名分类");}
+					else {alert("新建成功"); $(".alert").hide(); window.location.replace("/pan");}
+				}
+			})
+		})
+	}
+
+	function show_alert() {
+		$(".new_category").click(function(){
+			event.stopPropagation();
+			$(".alert").show();
+			$("body").css("background", "gray");
+		})
+		$(document).click(function(){
+			$(".alert").hide();
+			$("body").css("background", "white");
+		})
+		$(".alert").click(function(){
+			event.stopPropagation();
+		})
+	}
+
+	function get_categories(){
+		$.ajax({
+			url: "http://12plus12.cn:8080/categories",
+			type: "get",
+			dataType: "json",
+			success: function(data){
+				var html_ = "";
+				for (i in data) {
+					html_ += "<div class='category'>" +
+						"<div class='category_name'>" +
+						"<span>" + data[i][0] + "</span>" +
+						"</div>" +
+						"<ul class='file_name'>" +
+						"</ul>" +
+						"</div>"
+				}
+
+				$("#categories").html(html_);
+				drop_down();
+			},
+			error: function(){
+			}
+		})
+	}
+
+
+	function drop_down(){
+		$(".category").click(function(){
+
+		if (!($(this).is(".select"))) {
+
+			var this_ = $(this);
+
+			$(".select").removeClass("select");
+
+			$(this).addClass("select");
+
+			$(".file_name").css("display", "none");
+
+			$.ajax({
+				url: "http://12plus12.cn:8080/categories/" + $(this).find(".category_name span").html(),
+				type: "get",
+				dataType: "json",
+				success: function(data){
+					var html_ = "";
+					for (i in data) {
+						var img_path;
+						if (data[i][2] == 2) {img_path = "../static/img/default_img/documents.png"} 
+						else if (data[i][2] == 3) {img_path = data[i][1]}
+						else if (data[i][2] == 4) {img_path = "../static/img/default_img/audios.png"}
+						else if (data[i][2] == 5) {img_path = "../static/img/default_img/videos.png"}
+						else if (data[i][2] == 6) {img_path = "../static/img/default_img/others.png"}
+
+						html_ += "<li><ul class='up'><li><img src=" + img_path +"></li><li>" + data[i][0] + "</li><li><a href=" + data[i][1] + ">下载</a><li>删除</li></li></ul></li>"
+					}
+					this_.find(".file_name").html(html_);
+				}
+			})
+
+			$(this).find(".file_name").css("display", "block");
+
+		}
+
+		else {
+
+			$(this).removeClass("select");
+
+			$(this).find(".file_name").css("display", "none");
+
+		};
+
+	})
+
+	$(".file_name").click(function(){
+
+		event.stopPropagation();
+
+	})
+	}
+</script>
+</html>

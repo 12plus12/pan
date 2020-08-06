@@ -1,0 +1,24 @@
+<form name="myform" id="myform" method="post" action="" enctype="multipart/form-data">
+	<input type="file" name="files" id="files" onchange="showPreview(this)">
+	<img id="porttrait" src="" width="70" height="75">
+	<img src="https://12plus12-bucket.oss-cn-shanghai.aliyuncs.com/images/118615924414fa756co.jpg">
+</form>
+
+<script src="../static/lib/cryptojslib/rollups/md5.js"></script>
+<script src="../static/lib/cryptojslib/components/enc-base64-min.js"></script>
+<script>
+	function showPreview(source) {
+		var file = source.files[0];
+		if(window.FileReader) {
+			var fr = new FileReader();
+			fr.readAsBinaryString(file);
+			fr.onload = function(e) {
+				//console.log(fr.result);
+				console.log(CryptoJS.MD5(e.target.result));
+				console.log("message");
+			//	document.getElementById("porttrait").src=e.target.result;
+			
+			};
+		}
+	}
+</script>
